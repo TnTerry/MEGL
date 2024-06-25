@@ -36,7 +36,7 @@ Follow the instructions in `test_llava_init.ipynb` to initialize the llava model
 Use gdown to download the dataset from google drive.
 
 If gdown is not installed:
-```
+```Shell
 pip install gdown
 ```
 
