@@ -26,6 +26,9 @@ Add a special token in tokenizer_config.json of LLM to encode the image.
       "special": true
     }
 ```
+```
+"additional_special_tokens": ["<|im_start|>", "<|im_end|>", "<image>"],
+```
 
 ### 3. Dataset Preparation
 ```
