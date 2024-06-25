@@ -29,6 +29,8 @@ Add a special token in tokenizer_config.json of LLM to encode the image.
 ```python
 "additional_special_tokens": ["<|im_start|>", "<|im_end|>", "<image>"]
 ```
+Follow the instructions in <test_llava_init.ipynb> to initialize the llava model
+
 
 ### 3. Dataset Preparation
 ```
