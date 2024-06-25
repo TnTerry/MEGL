@@ -9,9 +9,13 @@ cd MEGL
 ```
 
 ### 2. Clone the models
-Clone the vision tower (e.g. CLIP) and the LLM (e.g. Qwen2-1.5B-Instruct)
+Clone the vision tower (e.g. CLIP)
 ```
 git clone https://huggingface.co/openai/clip-vit-large-patch14-336
+```
+
+and the LLM (e.g. Qwen2-1.5B-Instruct)
+```
 git clone https://huggingface.co/Qwen/Qwen2-1.5B-Instruct
 ```
 
