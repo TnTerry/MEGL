@@ -14,7 +14,20 @@ git clone https://huggingface.co/openai/clip-vit-large-patch14-336
 git clone https://huggingface.co/Qwen/Qwen2-1.5B-Instruct
 ```
 
-4. Dataset Preparation
+Add a special token in tokenizer_config.json of LLM to encode the image.
+
+```
+"151646": {
+      "content": "<image>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    }
+```
+
+3. Dataset Preparation
 ```
 mkdir Datasets
 cd Datasets
@@ -28,3 +41,4 @@ cd Action_Classification
 gdown 1V_kah3MZuHG7UUyPAlg27M1kjnil-uPI
 ```
 
+4. 
