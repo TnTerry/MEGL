@@ -14,9 +14,12 @@ Clone the vision tower (e.g. CLIP)
 git clone https://huggingface.co/openai/clip-vit-large-patch14-336
 ```
 
-and the LLM (e.g. Qwen2-1.5B-Instruct)
+Clone the LLM (e.g. Qwen2-1.5B-Instruct, Qwen2-0.5B-Instruct)
 ```
 git clone https://huggingface.co/Qwen/Qwen2-1.5B-Instruct
+```
+```
+git clone https://huggingface.co/Qwen/Qwen2-0.5B-Instruct
 ```
 
 Add a special token in tokenizer_config.json of LLM to encode the image.
