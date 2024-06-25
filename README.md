@@ -16,7 +16,7 @@ git clone https://huggingface.co/Qwen/Qwen2-1.5B-Instruct
 ```
 
 Add a special token in tokenizer_config.json of LLM to encode the image.
-```
+```python
 "151646": {
       "content": "<image>",
       "lstrip": false,
@@ -26,8 +26,8 @@ Add a special token in tokenizer_config.json of LLM to encode the image.
       "special": true
     }
 ```
-```
-"additional_special_tokens": ["<|im_start|>", "<|im_end|>", "<image>"],
+```python
+"additional_special_tokens": ["<|im_start|>", "<|im_end|>", "<image>"]
 ```
 
 ### 3. Dataset Preparation
