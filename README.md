@@ -33,6 +33,13 @@ Follow the instructions in `test_llava_init.ipynb` to initialize the llava model
 
 
 ### 3. Dataset Preparation
+Use gdown to download the dataset from google drive.
+
+If gdown is not installed:
+```
+pip install gdown
+```
+
 ```
 mkdir Datasets
 cd Datasets
@@ -40,6 +47,7 @@ mkdir Action_Classification
 mkdir Object_Classification
 cd Action_Classification
 gdown 1V_kah3MZuHG7UUyPAlg27M1kjnil-uPI
+unzip Action_Classification.zip
 ```
 
-4. 
+### 4. 
