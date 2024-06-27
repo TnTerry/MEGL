@@ -6,7 +6,7 @@ from huggingface_hub import login, HfApi
 import os
 
 # Define your Hugging Face API token
-hf_token = "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"
+hf_token = "your_token"
 
 model_name = "meta-llama/Llama-2-7b-hf"
 
