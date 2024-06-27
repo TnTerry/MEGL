@@ -22,11 +22,6 @@ git clone https://huggingface.co/Qwen/Qwen2-1.5B-Instruct
 ```
 git clone https://huggingface.co/Qwen/Qwen2-0.5B-Instruct
 ```
-Note for git lfs
-```
-git lfs install
-git lfs pull
-```
 
 Add a special token in tokenizer_config.json of LLM to encode the image.
 ```python
