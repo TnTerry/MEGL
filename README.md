@@ -4,7 +4,7 @@
 
 ### 1. Clone this repo
 ```
-git clone git@github.com:TnTerry/MEGL.git
+git clone https://github.com/TnTerry/MEGL.git
 cd MEGL
 ```
 
