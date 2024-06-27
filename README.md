@@ -53,7 +53,13 @@ mkdir Action_Classification
 mkdir Object_Classification
 cd Action_Classification
 gdown 1V_kah3MZuHG7UUyPAlg27M1kjnil-uPI
+```
+
+```Shell
+sudo apt-get update
+sudo apt-get install unzip
 unzip Action_Classification.zip
 ```
+
 
 ### 4. 
