@@ -2,3 +2,4 @@ scikit-learn
 opencv-python
 transformers
 prettytable
+gdown
