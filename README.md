@@ -6,6 +6,7 @@
 ```
 git clone https://github.com/TnTerry/MEGL.git
 cd MEGL
+pip install -r requirements.txt
 ```
 
 ### 2. Clone the models
