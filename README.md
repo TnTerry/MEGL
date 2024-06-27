@@ -42,12 +42,7 @@ Follow the instructions in `test_llava_init.ipynb` to initialize the llava model
 
 ### 3. Dataset Preparation
 Use gdown to download the dataset from google drive.
-
-If gdown is not installed:
 ```Shell
-pip install gdown
-```
-```
 mkdir Datasets
 cd Datasets
 mkdir Action_Classification
@@ -60,6 +55,11 @@ gdown 1V_kah3MZuHG7UUyPAlg27M1kjnil-uPI
 sudo apt-get update
 sudo apt-get install unzip
 unzip Action_Classification.zip
+```
+Install libgl for opencv
+```Shell
+sudo apt-get update
+sudo apt-get install libgl1-mesa-glx
 ```
 
 
