@@ -9,9 +9,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import models
-from utils import *
+from MEGL.utils.utils import *
 from torch.nn.utils.rnn import pad_sequence
-from gradcam import GradCam
+from MEGL.utils.gradcam import GradCam
 from PIL import Image
 import requests
 import torch
