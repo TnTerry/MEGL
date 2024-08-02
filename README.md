@@ -57,14 +57,9 @@ unzip Action_Classification.zip
 
 Object:
 ```Shell
-mkdir Datasets
-cd Datasets
-mkdir Action_Classification
-mkdir Object_Classification
+cd ..
 cd Object_Classification
 gdown 1SybY478ZMaTUhOWCGQIYPSKbSx-dUJfE
-sudo apt-get update
-sudo apt-get install unzip
 unzip Object_Classification.zip
 ```
 
