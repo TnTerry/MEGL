@@ -160,58 +160,6 @@ def lr_lambda(epoch):
 
 scheduler = LambdaLR(optimizer, lr_lambda)
 
-# model.eval()
-# correct = 0
-# total = 0
-# total_label_tuned = []
-# total_pred_tuned = []
-# total_outputs_tuned = []
-# with torch.no_grad():
-#     for data in tqdm(test_loader, desc="Pre-trained Model Evaluation"):
-#         human_input, gpt_output, images, visual_exps, class_ids, ans = data
-#         images = images.to(device)
-#         labels = class_ids.to(device)
-#         outputs, y_pred_text = model(images)
-#         _, predicted = torch.max(outputs.data, 1)
-#         total += labels.size(0)
-#         correct += (predicted == labels).sum().item()
-#         total_label_tuned.extend(labels.cpu().tolist())
-#         total_pred_tuned.extend(predicted.cpu().tolist())
-#         total_outputs_tuned.extend(outputs.cpu().tolist())
-
-# total_outputs_tuned = np.array(total_outputs_tuned)
-# total_label_tuned = np.array(total_label_tuned)
-
-# test_accuracy_tuned = accuracy_score(total_label_tuned, total_pred_tuned)
-# test_recall_tuned_micro = recall_score(total_label_tuned, total_pred_tuned, average="micro")
-# test_precision_tuned_micro = precision_score(total_label_tuned, total_pred_tuned, average="micro")
-# test_f1_tuned_micro = f1_score(total_label_tuned, total_pred_tuned, average="micro")
-
-# soft_max_outputs_tuned = torch.tensor(total_outputs_tuned)
-# soft_max_outputs_tuned = F.softmax(soft_max_outputs_tuned)
-
-# test_auc_tuned_micro = roc_auc_score(total_label_tuned, soft_max_outputs_tuned.numpy(), 
-#                                      average="micro", multi_class="ovr")
-
-# test_recall_tuned_macro = recall_score(total_label_tuned, total_pred_tuned, average="macro")
-# test_precision_tuned_macro = precision_score(total_label_tuned, total_pred_tuned, average="macro")
-# test_f1_tuned_macro = f1_score(total_label_tuned, total_pred_tuned, average="macro")
-# test_auc_tuned_macro = roc_auc_score(total_label_tuned, soft_max_outputs_tuned.numpy(), 
-#                                      average="macro", multi_class="ovr")
-
-# print("-"*10 + "Before Fine-tuning" + "-"*10)
-# tb = pt.PrettyTable()
-# tb.field_names = ["", "Accuracy", "Recall", "Precision", "F1", "AUC"]
-# tb.add_row(
-#     ["Micro",test_accuracy_tuned, test_recall_tuned_micro, 
-#      test_precision_tuned_micro, test_f1_tuned_micro, test_auc_tuned_micro]
-# )
-# tb.add_row(
-#     ['Macro', test_accuracy_tuned, test_recall_tuned_macro, 
-#      test_precision_tuned_macro, test_f1_tuned_macro, test_auc_tuned_macro]
-# )
-# print(tb)
-
 print("-"*10 + "Training Starts" + "-"*10)
 
 for epoch in range(args.num_epochs):
