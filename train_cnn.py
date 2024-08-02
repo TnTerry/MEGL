@@ -5,6 +5,7 @@ from collections import Counter
 import argparse
 from pathlib import Path
 import math
+import time
 
 from PIL import Image
 import numpy as np
@@ -36,13 +37,17 @@ from model.cnn import MEGL_CNN
 # Create parser
 def parse_args():
     parser = argparse.ArgumentParser(description='Process the task type.')
-    parser.add_argument('--task', type=str, default='action', choices=['action', 'object'],
+    parser.add_argument('--task', type=str, default='object', choices=['action', 'object'],
                         help='Specify the task type: "action" or "object".')
     parser.add_argument('--explanation_type', type=str, default="multimodal", 
                         choices=["multimodal", "visual", "none", "text"],
                         help="Specify the type of explanation-guided learning (default: multimodal)")
     parser.add_argument('--num_epochs', type=int, default=3,
                         help='Specify the number of epochs for training (default: 3).')
+    parser.add_argument('--transformation', type=str, default="GRADIA", choices=["GRADIA", "HAICS"],
+                        help='Specify the type of transformation for the visual explanation (default: GRADIA).')
+    parser.add_argument('--batch_size', type=int, default=8, 
+                        help='Specify the batch size (default: 8).')
     parser.add_argument('--att_weight', type=float, default=0.1,
                         help='Weight of the attention loss term in the loss function (default: 1).')
     parser.add_argument('--exp_weight', type=float, default=1,
@@ -136,8 +141,8 @@ train_size = int(0.8 * len(dataset))
 test_size = len(dataset) - train_size
 train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
-train_loader = DataLoader(train_dataset, batch_size=64, collate_fn=custom_collate_fn)
-test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=custom_collate_fn)
+train_loader = DataLoader(train_dataset, batch_size=args.batch_size, collate_fn=custom_collate_fn)
+test_loader = DataLoader(test_dataset, batch_size=args.batch_size, collate_fn=custom_collate_fn)
 
 model = MEGL_CNN(args.explanation_type, num_classes)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -155,57 +160,57 @@ def lr_lambda(epoch):
 
 scheduler = LambdaLR(optimizer, lr_lambda)
 
-model.eval()
-correct = 0
-total = 0
-total_label_tuned = []
-total_pred_tuned = []
-total_outputs_tuned = []
-with torch.no_grad():
-    for data in tqdm(test_loader, desc="Pre-trained Model Evaluation"):
-        human_input, gpt_output, images, visual_exps, class_ids, ans = data
-        images = images.to(device)
-        labels = class_ids.to(device)
-        outputs, y_pred_text = model(images)
-        _, predicted = torch.max(outputs.data, 1)
-        total += labels.size(0)
-        correct += (predicted == labels).sum().item()
-        total_label_tuned.extend(labels.cpu().tolist())
-        total_pred_tuned.extend(predicted.cpu().tolist())
-        total_outputs_tuned.extend(outputs.cpu().tolist())
+# model.eval()
+# correct = 0
+# total = 0
+# total_label_tuned = []
+# total_pred_tuned = []
+# total_outputs_tuned = []
+# with torch.no_grad():
+#     for data in tqdm(test_loader, desc="Pre-trained Model Evaluation"):
+#         human_input, gpt_output, images, visual_exps, class_ids, ans = data
+#         images = images.to(device)
+#         labels = class_ids.to(device)
+#         outputs, y_pred_text = model(images)
+#         _, predicted = torch.max(outputs.data, 1)
+#         total += labels.size(0)
+#         correct += (predicted == labels).sum().item()
+#         total_label_tuned.extend(labels.cpu().tolist())
+#         total_pred_tuned.extend(predicted.cpu().tolist())
+#         total_outputs_tuned.extend(outputs.cpu().tolist())
 
-total_outputs_tuned = np.array(total_outputs_tuned)
-total_label_tuned = np.array(total_label_tuned)
+# total_outputs_tuned = np.array(total_outputs_tuned)
+# total_label_tuned = np.array(total_label_tuned)
 
-test_accuracy_tuned = accuracy_score(total_label_tuned, total_pred_tuned)
-test_recall_tuned_micro = recall_score(total_label_tuned, total_pred_tuned, average="micro")
-test_precision_tuned_micro = precision_score(total_label_tuned, total_pred_tuned, average="micro")
-test_f1_tuned_micro = f1_score(total_label_tuned, total_pred_tuned, average="micro")
+# test_accuracy_tuned = accuracy_score(total_label_tuned, total_pred_tuned)
+# test_recall_tuned_micro = recall_score(total_label_tuned, total_pred_tuned, average="micro")
+# test_precision_tuned_micro = precision_score(total_label_tuned, total_pred_tuned, average="micro")
+# test_f1_tuned_micro = f1_score(total_label_tuned, total_pred_tuned, average="micro")
 
-soft_max_outputs_tuned = torch.tensor(total_outputs_tuned)
-soft_max_outputs_tuned = F.softmax(soft_max_outputs_tuned)
+# soft_max_outputs_tuned = torch.tensor(total_outputs_tuned)
+# soft_max_outputs_tuned = F.softmax(soft_max_outputs_tuned)
 
-test_auc_tuned_micro = roc_auc_score(total_label_tuned, soft_max_outputs_tuned.numpy(), 
-                                     average="micro", multi_class="ovr")
+# test_auc_tuned_micro = roc_auc_score(total_label_tuned, soft_max_outputs_tuned.numpy(), 
+#                                      average="micro", multi_class="ovr")
 
-test_recall_tuned_macro = recall_score(total_label_tuned, total_pred_tuned, average="macro")
-test_precision_tuned_macro = precision_score(total_label_tuned, total_pred_tuned, average="macro")
-test_f1_tuned_macro = f1_score(total_label_tuned, total_pred_tuned, average="macro")
-test_auc_tuned_macro = roc_auc_score(total_label_tuned, soft_max_outputs_tuned.numpy(), 
-                                     average="macro", multi_class="ovr")
+# test_recall_tuned_macro = recall_score(total_label_tuned, total_pred_tuned, average="macro")
+# test_precision_tuned_macro = precision_score(total_label_tuned, total_pred_tuned, average="macro")
+# test_f1_tuned_macro = f1_score(total_label_tuned, total_pred_tuned, average="macro")
+# test_auc_tuned_macro = roc_auc_score(total_label_tuned, soft_max_outputs_tuned.numpy(), 
+#                                      average="macro", multi_class="ovr")
 
-print("-"*10 + "Before Fine-tuning" + "-"*10)
-tb = pt.PrettyTable()
-tb.field_names = ["", "Accuracy", "Recall", "Precision", "F1", "AUC"]
-tb.add_row(
-    ["Micro",test_accuracy_tuned, test_recall_tuned_micro, 
-     test_precision_tuned_micro, test_f1_tuned_micro, test_auc_tuned_micro]
-)
-tb.add_row(
-    ['Macro', test_accuracy_tuned, test_recall_tuned_macro, 
-     test_precision_tuned_macro, test_f1_tuned_macro, test_auc_tuned_macro]
-)
-print(tb)
+# print("-"*10 + "Before Fine-tuning" + "-"*10)
+# tb = pt.PrettyTable()
+# tb.field_names = ["", "Accuracy", "Recall", "Precision", "F1", "AUC"]
+# tb.add_row(
+#     ["Micro",test_accuracy_tuned, test_recall_tuned_micro, 
+#      test_precision_tuned_micro, test_f1_tuned_micro, test_auc_tuned_micro]
+# )
+# tb.add_row(
+#     ['Macro', test_accuracy_tuned, test_recall_tuned_macro, 
+#      test_precision_tuned_macro, test_f1_tuned_macro, test_auc_tuned_macro]
+# )
+# print(tb)
 
 print("-"*10 + "Training Starts" + "-"*10)
 
@@ -223,6 +228,7 @@ for epoch in range(args.num_epochs):
     )
 
     for i, data in enumerate(train_loader):
+        start_time = time.time()
         human_input, gpt_output, images, visual_exps, class_ids, ans = data
         images = images.to(device)
         class_ids = class_ids.to(device)
@@ -232,15 +238,16 @@ for epoch in range(args.num_epochs):
         if args.explanation_type in ["multimodal", "visual"]:
             # att_map, _ = grad_cam.get_attention_map(images, class_ids, norm="ReLU")
             if visual_exps.cpu().numpy().any():
-                att_map_lst = [
-                    grad_cam.get_attention_map(torch.unsqueeze(image, 0), label, norm="ReLU")[0] 
-                    for image, label in zip(images, class_ids)
-                ]
+                # att_map_lst = [
+                #     grad_cam.get_attention_map(torch.unsqueeze(image, 0), label, norm="ReLU")[0] 
+                #     for image, label in zip(images, class_ids)
+                # ]
+                att_maps, _ = grad_cam.get_attention_map(images, class_ids, norm="ReLU")
                 visual_exps_resized = normalize_and_resize(visual_exps).to(device)
-                att_maps = torch.stack(att_map_lst)
+                # att_maps = torch.stack(att_map_lst)
                 att_loss = F.l1_loss(att_maps, visual_exps_resized)
-                visual_exps_resized_trans = visual_exp_transform(visual_exps_resized, "HAICS")
-                att_loss += cal_trans_att_loss(att_maps, visual_exps_resized_trans, "HAICS")
+                visual_exps_resized_trans = visual_exp_transform(visual_exps_resized, args.transformation)
+                att_loss += cal_trans_att_loss(att_maps, visual_exps_resized_trans, args.transformation)
             else:
                 att_loss = torch.zeros(1, dtype=torch.float32).to(device)
         else:
@@ -260,9 +267,10 @@ for epoch in range(args.num_epochs):
         running_att_loss += att_loss.item()
 
         if (i + 1) % 5 == 0:
+            end_time = time.time()
             print(f'[{epoch + 1} / {args.num_epochs}, {i + 1} / {len(train_loader)}] loss: {running_loss / 100:.3f}, '
                   f'pred_loss: {running_pred_loss / 100:.3f}, '
-                  f'att_loss: {running_att_loss / 100:.3f}')
+                  f'att_loss: {running_att_loss / 100:.3f}, time:{end_time - start_time:.3f}')
             running_loss = 0.0
             running_pred_loss = 0.0
             running_att_loss = 0.0
