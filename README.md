@@ -50,7 +50,11 @@ mkdir Action_Classification
 mkdir Object_Classification
 cd Action_Classification
 gdown 1V_kah3MZuHG7UUyPAlg27M1kjnil-uPI
+sudo apt-get update
+sudo apt-get install unzip
+unzip Action_Classification.zip
 ```
+
 Object:
 ```Shell
 mkdir Datasets
@@ -59,13 +63,11 @@ mkdir Action_Classification
 mkdir Object_Classification
 cd Object_Classification
 gdown 1SybY478ZMaTUhOWCGQIYPSKbSx-dUJfE
-```
-
-```Shell
 sudo apt-get update
 sudo apt-get install unzip
-unzip Action_Classification.zip
+unzip Object_Classification.zip
 ```
+
 Install libgl for opencv
 ```Shell
 sudo apt-get update
