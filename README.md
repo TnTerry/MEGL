@@ -4,7 +4,7 @@
 
 ### 1. Clone this repo
 ```
-git clone https://github.com/TnTerry/MEGL.git
+git clone --branch llava --single-branch https://github.com/TnTerry/MEGL.git
 cd MEGL
 pip install -r requirements.txt
 ```
