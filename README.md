@@ -57,8 +57,8 @@ mkdir Datasets
 cd Datasets
 mkdir Action_Classification
 mkdir Object_Classification
-cd Action_Classification
-gdown 1V_kah3MZuHG7UUyPAlg27M1kjnil-uPI
+cd Object_Classification
+gdown 1SybY478ZMaTUhOWCGQIYPSKbSx-dUJfE
 ```
 
 ```Shell
