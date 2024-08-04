@@ -141,8 +141,8 @@ train_size = int(0.8 * len(dataset))
 test_size = len(dataset) - train_size
 train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
-train_loader = DataLoader(train_dataset, batch_size=64, collate_fn=custom_collate_fn)
-test_loader = DataLoader(test_dataset, batch_size=64, collate_fn=custom_collate_fn)
+train_loader = DataLoader(train_dataset, batch_size=args.batch_size, collate_fn=custom_collate_fn)
+test_loader = DataLoader(test_dataset, batch_size=args.batch_size, collate_fn=custom_collate_fn)
 
 clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch16")
 clip_vit = clip_model.vision_model
