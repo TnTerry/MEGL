@@ -42,6 +42,8 @@ def parse_args():
     parser.add_argument('--explanation_type', type=str, default="multimodal", 
                         choices=["multimodal", "visual", "none", "text"],
                         help="Specify the type of explanation-guided learning (default: multimodal)")
+    parser.add_argument('--model_type', type=str, default="resnet50", choices=["resnet50", "resnet101", "resnet34"],
+                        help='Specify the type of CNN model (default: resnet50).')
     parser.add_argument('--num_epochs', type=int, default=3,
                         help='Specify the number of epochs for training (default: 3).')
     parser.add_argument('--transformation', type=str, default="GRADIA", choices=["GRADIA", "HAICS"],
@@ -144,7 +146,11 @@ train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 train_loader = DataLoader(train_dataset, batch_size=args.batch_size, collate_fn=custom_collate_fn)
 test_loader = DataLoader(test_dataset, batch_size=args.batch_size, collate_fn=custom_collate_fn)
 
-model = MEGL_CNN(args.explanation_type, num_classes)
+model = MEGL_CNN(
+    explanation_type=args.explanation_type,
+    num_classes=num_classes,
+    cnn_type=args.model_type
+)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
 
