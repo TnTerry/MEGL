@@ -6,41 +6,11 @@
 ```
 git clone --branch llava --single-branch https://github.com/TnTerry/MEGL.git
 cd MEGL
+pip install --upgrade pip  # enable PEP 660 support
 pip install -r requirements.txt
 ```
 
-### 2. Clone the models
-Clone the vision tower (e.g. CLIP)
-```
-git clone https://huggingface.co/openai/clip-vit-large-patch14-336
-```
-
-Clone the LLM (e.g. Qwen2-1.5B-Instruct, Qwen2-0.5B-Instruct)
-```
-git clone https://huggingface.co/Qwen/Qwen2-1.5B-Instruct
-```
-```
-git clone https://huggingface.co/Qwen/Qwen2-0.5B-Instruct
-```
-
-Add a special token in tokenizer_config.json of LLM to encode the image.
-```python
-"151646": {
-      "content": "<image>",
-      "lstrip": false,
-      "normalized": false,
-      "rstrip": false,
-      "single_word": false,
-      "special": true
-    }
-```
-```python
-"additional_special_tokens": ["<|im_start|>", "<|im_end|>", "<image>"]
-```
-Follow the instructions in `test_llava_init.ipynb` to initialize the llava model
-
-
-### 3. Dataset Preparation
+### 2. Dataset Preparation
 Use gdown to download the dataset from google drive.
 Action:
 ```Shell
@@ -69,4 +39,29 @@ sudo apt-get update
 sudo apt-get install libgl1-mesa-glx
 ```
 
-### 4. 
+Now, you can simply fine-tune the model
+
+### 3. Prepare for Multimodal Explanation-Guided Learning
+
+Clone the LLaVA Model
+```
+git clone https://github.com/haotian-liu/LLaVA.git
+cd LLaVA
+pip install -e.
+```
+
+Install the packages for training
+```
+pip install -e ".[train]"
+pip install flash-attn --no-build-isolation
+```
+
+Clone the vision tower (e.g. CLIP)
+```
+git clone https://huggingface.co/openai/clip-vit-large-patch14-336
+```
+
+Clone the LLaVA Model weight
+```
+
+```
