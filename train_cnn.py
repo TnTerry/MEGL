@@ -37,7 +37,7 @@ from model.cnn import MEGL_CNN
 # Create parser
 def parse_args():
     parser = argparse.ArgumentParser(description='Process the task type.')
-    parser.add_argument('--task', type=str, default='object', choices=['action', 'object'],
+    parser.add_argument('--task', type=str, default='action', choices=['action', 'object'],
                         help='Specify the task type: "action" or "object".')
     parser.add_argument('--explanation_type', type=str, default="multimodal", 
                         choices=["multimodal", "visual", "none", "text"],
@@ -153,6 +153,7 @@ model = MEGL_CNN(
 )
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
+processor = AutoProcessor.from_pretrained("llava-hf/llava-1.5-7b-hf")
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.AdamW(model.parameters(), lr=1e-4)
@@ -186,7 +187,10 @@ for epoch in range(args.num_epochs):
         human_input, gpt_output, images, visual_exps, class_ids, ans = data
         images = images.to(device)
         class_ids = class_ids.to(device)
-        y_pred_label, y_pred_text = model(images)
+        # human_input = human_input.to(device)
+        visual_exps = visual_exps.to(device)
+        inputs = processor(text=human_input, images=visual_exps, return_tensors="pt").to(device)
+        y_pred_label, y_pred_text = model(images, inputs)
         pred_loss = criterion(y_pred_label, class_ids)
         
         if args.explanation_type in ["multimodal", "visual"]:
