@@ -121,12 +121,12 @@ class MEGL_CNN_multimodal(nn.Module):
             self.cnn_net = models.resnet34(weights=models.ResNet34_Weights.IMAGENET1K_V1)
         self.cnn_net.fc = nn.Linear(self.cnn_net.fc.in_features, num_classes)
 
-        self.grad_cam = GradCam(
-            model=self.model.cnn_net,
-            feature_module=model.cnn_net.layer4,
-            target_layer_names=["1"],
-            use_cuda=True
-        )
+        # self.grad_cam = GradCam(
+        #     model=self.cnn_net,
+        #     feature_module=model.cnn_net.layer4,
+        #     target_layer_names=["1"],
+        #     use_cuda=True
+        # )
 
         # TODO: LLaVA Init
         if self.explanation_type in ['text', 'multimodal']:
@@ -190,7 +190,7 @@ class MEGL_CNN_multimodal(nn.Module):
                                       attention_mask=attention_mask)
 
         grad_cam = GradCam(
-            model=model.cnn_net,
+            model=self.cnn_net,
             feature_module=model.cnn_net.layer4,
             target_layer_names=["1"],
             use_cuda=True
