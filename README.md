@@ -12,7 +12,7 @@ pip install -r requirements.txt
 
 ### 2. Dataset Preparation
 Use gdown to download the dataset from google drive.
-Action:
+
 ```Shell
 mkdir Datasets
 cd Datasets
@@ -23,10 +23,6 @@ gdown 1V_kah3MZuHG7UUyPAlg27M1kjnil-uPI
 sudo apt-get update
 sudo apt-get install unzip
 unzip Action_Classification.zip
-```
-
-Object:
-```Shell
 cd ..
 cd Object_Classification
 gdown 1SybY478ZMaTUhOWCGQIYPSKbSx-dUJfE
