@@ -34,30 +34,3 @@ Install libgl for opencv
 sudo apt-get update
 sudo apt-get install libgl1-mesa-glx
 ```
-
-Now, you can simply fine-tune the model
-
-### 3. Prepare for Multimodal Explanation-Guided Learning
-
-Clone the LLaVA Model
-```
-git clone https://github.com/haotian-liu/LLaVA.git
-cd LLaVA
-pip install -e.
-```
-
-Install the packages for training
-```
-pip install -e ".[train]"
-pip install flash-attn --no-build-isolation
-```
-
-Clone the vision tower (e.g. CLIP)
-```
-git clone https://huggingface.co/openai/clip-vit-large-patch14-336
-```
-
-Clone the LLaVA Model weight
-```
-
-```
