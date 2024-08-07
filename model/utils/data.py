@@ -124,6 +124,7 @@ class TrainMEGLCollator:
         return input_ids, labels
     
     def __call__(self, features:list) -> dict:
+        # TODO: Modify this to intergrate the original collator
         input_ids_list = []
         labels_list = []
         pixel_values_list = []
