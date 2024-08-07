@@ -8,3 +8,4 @@ pandas
 wandb
 evaluate
 datasets
+peft
