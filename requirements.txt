@@ -6,3 +6,5 @@ gdown
 accelerate
 pandas
 wandb
+evaluate
+datasets
