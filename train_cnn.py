@@ -11,6 +11,7 @@ from PIL import Image
 import numpy as np
 import cv2
 from tqdm import tqdm
+import wandb
 
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.preprocessing import OneHotEncoder
@@ -37,25 +38,38 @@ from model.cnn import MEGL_CNN
 # Create parser
 def parse_args():
     parser = argparse.ArgumentParser(description='Process the task type.')
-    parser.add_argument('--task', type=str, default='action', choices=['action', 'object'],
+
+    parser.add_argument('--task', type=str, default='object', choices=['action', 'object'],
                         help='Specify the task type: "action" or "object".')
+    
     parser.add_argument('--explanation_type', type=str, default="multimodal", 
                         choices=["multimodal", "visual", "none", "text"],
                         help="Specify the type of explanation-guided learning (default: multimodal)")
+    
     parser.add_argument('--model_type', type=str, default="resnet50", choices=["resnet50", "resnet101", "resnet34"],
                         help='Specify the type of CNN model (default: resnet50).')
+    
     parser.add_argument('--num_epochs', type=int, default=3,
                         help='Specify the number of epochs for training (default: 3).')
+    
     parser.add_argument('--transformation', type=str, default="GRADIA", choices=["GRADIA", "HAICS"],
                         help='Specify the type of transformation for the visual explanation (default: GRADIA).')
+    
     parser.add_argument('--batch_size', type=int, default=8, 
                         help='Specify the batch size (default: 8).')
+    
     parser.add_argument('--att_weight', type=float, default=0.1,
                         help='Weight of the attention loss term in the loss function (default: 1).')
+    
     parser.add_argument('--exp_weight', type=float, default=1,
                         help='Weight of the explanation loss term in the loss function (default: 1).')
+    
+    parser.add_argument('--lr', type=float, default=1e-4,
+                        help='Specify the learning rate (default: 1e-4).')
+
     args = parser.parse_args()
     return args
+
 
 # Get the directory path of the current script
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -153,10 +167,9 @@ model = MEGL_CNN(
 )
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = model.to(device)
-processor = AutoProcessor.from_pretrained("llava-hf/llava-1.5-7b-hf")
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.AdamW(model.parameters(), lr=1e-4)
+optimizer = optim.AdamW(model.parameters(), lr=args.lr)
 
 def lr_lambda(epoch):
     warmup_epochs = 10
@@ -187,10 +200,7 @@ for epoch in range(args.num_epochs):
         human_input, gpt_output, images, visual_exps, class_ids, ans = data
         images = images.to(device)
         class_ids = class_ids.to(device)
-        # human_input = human_input.to(device)
-        visual_exps = visual_exps.to(device)
-        inputs = processor(text=human_input, images=visual_exps, return_tensors="pt").to(device)
-        y_pred_label, y_pred_text = model(images, inputs)
+        y_pred_label, y_pred_text = model(images)
         pred_loss = criterion(y_pred_label, class_ids)
         
         if args.explanation_type in ["multimodal", "visual"]:
