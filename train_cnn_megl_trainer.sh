@@ -2,8 +2,8 @@
 
 deepspeed --include localhost:0 train_cnn_megl_trainer.py \
     --deepspeed ds_zero2_no_offload.json \
-    --model_name_or_path liuhaotian/llava-v1.5-7b \
-    --train_type use_lora \
+    --model_name_or_path llava-hf/llava-1.5-7b-hf \
+    --train_type none \
     --data_path MEGL/Datasets/Object_Classification \
     --remove_unused_columns false \
     --bf16 true \
@@ -22,6 +22,3 @@ deepspeed --include localhost:0 train_cnn_megl_trainer.py \
     --report_to "tensorboard" \
     --learning_rate 5e-5 \
     --logging_steps 10 \
-    --train_type use_lora \
-    --att_weight 0.1 \
-    --exp_weight 0.1
