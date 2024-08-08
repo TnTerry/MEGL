@@ -223,8 +223,6 @@ class TrainMEGLCollator:
 
         for feature in features:
             image = Image.open(feature[2]).convert('RGB')
-            image = transform_image(image)
-            image_lst.append(image)
 
             if feature[3]:
                 visual_exp = np.load(feature[3])
@@ -238,10 +236,13 @@ class TrainMEGLCollator:
             else:
                 visual_exp = Image.new('RGB', image.size, (0, 0, 0)) # Dummy image of zeros
             
+            image = transform_image(image)
+            image_lst.append(image)
+
             visual_exp = transform_visualexp(visual_exp)
             visual_exp_lst.append(visual_exp)
 
-            class_id = torch.tensor(class_id, dtype=torch.long)
+            class_id = torch.tensor(feature[4], dtype=torch.long)
             class_id_lst.append(class_id)
         
         images = torch.stack(image_lst)
