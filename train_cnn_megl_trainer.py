@@ -5,6 +5,7 @@ import sys
 from dataclasses import dataclass, field
 from itertools import chain
 from typing import Optional
+from collections import Counter
 
 import datasets
 import evaluate
@@ -273,11 +274,12 @@ class MEGLTrainer(Trainer):
         return loss.detach() / self.args.gradient_accumulation_steps
 
     def compute_loss(self, model, inputs, return_outputs=False):
+        # inputs = {k: v.half() if isinstance(v, torch.Tensor) else v for k, v in inputs.items()}
         if self.label_smoother is not None and "labels" in inputs:
             labels = inputs.pop("labels")
         else:
             labels = None
-        y_label, outputs, att_loss = model(**inputs)
+        y_label, outputs, att_loss = model(inputs)
         # Save past state if it exists
         # TODO: this needs to be fixed and made cleaner later.
         if self.args.past_index >= 0:
@@ -313,10 +315,12 @@ def train():
         (ModelArguments, DataArguments, TrainingArguments)
     )
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-    if "Object" in data_args.data_path:
-        num_classes = 8
-    elif "Classification" in data_args.data_path:
-        num_classes = 3
+    dataset = MEGLDataset(data_args.data_path)
+    # Adjust the num_classes based on the actual dataset
+    class_id_lst = [int(dataset[i][4]) for i in range(len(dataset))]
+    class_id_cnt = Counter(class_id_lst)
+    print("Acutal Dataset Label:\n", class_id_cnt)
+    num_classes = len(class_id_cnt)
     model, processor = load_model_processor(num_classes, model_args)
     dataset, data_collator = load_dataset_collator(processor, data_args)
 
