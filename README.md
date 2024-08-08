@@ -6,6 +6,8 @@
 ```
 git clone --branch llava --single-branch https://github.com/TnTerry/MEGL.git
 cd MEGL
+conda create -n megl python=3.10 -y
+conda activate megl
 pip install --upgrade pip  # enable PEP 660 support
 pip install -r requirements.txt
 ```
