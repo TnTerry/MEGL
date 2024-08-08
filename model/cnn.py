@@ -133,7 +133,6 @@ class MEGL_CNN_multimodal(nn.Module):
                 pretrained_model_name_or_path=llava_model_name_or_path,
                 torch_dtype=torch.bfloat16
             )
-            self.processor = AutoProcessor.from_pretrained(llava_model_name_or_path)
             self.embedding_shape = self.llava_model.language_model.model.embed_tokens.embedding_dim
             self.projector = nn.Sequential(
                 nn.Linear(self.num_classes, self.hidden_size, bias=True),
@@ -141,7 +140,7 @@ class MEGL_CNN_multimodal(nn.Module):
                 nn.Linear(self.hidden_size, 4096, bias=True)
             )
         else:
-            self.processor, self.llava_model = None, None
+            self.llava_model = None
         
     def forward(
             self, 
@@ -182,7 +181,11 @@ class MEGL_CNN_multimodal(nn.Module):
                     image_features, inputs_embeds, input_ids, attention_mask, labels
             )
 
-            inputs_embeds += self.projector(y_label)
+            print("inputs_embeds shape:", inputs_embeds.shape)
+            print("y_label shape:", y_label.shape)
+            print("projector output shape:", self.projector(y_label).shape)
+
+            inputs_embeds += self.projector(y_label).unsqueeze(1)
 
             y_text = self.llava_model(inputs_embeds=inputs_embeds, 
                                       labels=labels,
@@ -190,7 +193,7 @@ class MEGL_CNN_multimodal(nn.Module):
 
         grad_cam = GradCam(
             model=self.cnn_net,
-            feature_module=model.cnn_net.layer4,
+            feature_module=self.cnn_net.layer4,
             target_layer_names=["1"],
             use_cuda=True
         )
