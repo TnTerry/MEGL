@@ -194,13 +194,13 @@ def load_model_processor(num_classes, modelargs:ModelArguments):
     elif modelargs.train_type == "freeze_vision":
         logging.warning("Vision tower frozen")
 
-        for param in model.vision_tower.parameters():
+        for param in model.llava_model.vision_tower.parameters():
             param.requires_grad = False
     
     elif modelargs.train_type == "freeze_vision_lora":
         logging.warning("Vision tower frozen and lora")
 
-        for param in model.vision_tower.parameters():
+        for param in model.llava_model.vision_tower.parameters():
             param.requires_grad = False
         
         from peft import LoraConfig, get_peft_model
@@ -234,8 +234,11 @@ def load_dataset_collator(processor, dataargs: DataArguments):
 
 
 class MEGLTrainer(Trainer):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, model, args, data_collator, train_dataset, eval_dataset):
+        super().__init__(
+            model=model, args=args, data_collator=data_collator,
+            train_dataset=train_dataset, eval_dataset=eval_dataset
+        )
         self.megl_pred_criterion = nn.CrossEntropyLoss()
     
     def training_step(
