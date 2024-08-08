@@ -10,3 +10,4 @@ evaluate
 datasets
 peft
 deepspeed
+tensorboard
