@@ -44,7 +44,6 @@ class MEGL_CNN(nn.Module):
                 pretrained_model_name_or_path=llava_model_name_or_path,
                 torch_dtype=torch.bfloat16
             )
-            self.processor = AutoProcessor.from_pretrained(llava_model_name_or_path)
             self.embedding_shape = self.llava_model.language_model.model.embed_tokens.embedding_dim
             self.projector = nn.Sequential(
                 nn.Linear(self.num_classes, self.hidden_size, bias=True),
