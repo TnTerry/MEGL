@@ -18,6 +18,7 @@ from transformers import (
     AutoConfig,
     AutoModelForCausalLM,
     AutoProcessor,
+    LlavaProcessor,
     AutoTokenizer,
     HfArgumentParser,
     Trainer,
@@ -163,9 +164,10 @@ def load_model_processor(num_classes, modelargs:ModelArguments):
     )
 
     processor = AutoProcessor.from_pretrained(modelargs.model_name_or_path)
+    # processor = LlavaProcessor..from_pretrained(modelargs.model_name_or_path)
 
     if modelargs.train_type == "use_lora":
-        logging.waring("Loading model to lora")
+        logging.warning("Loading model to lora")
 
         from peft import LoraConfig, get_peft_model
 
@@ -224,7 +226,7 @@ def load_model_processor(num_classes, modelargs:ModelArguments):
 def load_dataset_collator(processor, dataargs: DataArguments):
 
     llava_dataset = MEGLDataset(
-        dataargs.data_path  # "data/liuhaotian/LLaVA-CC3M-Pretrain-595K"
+        dataargs.data_path
     )
     data_collator = TrainMEGLCollator(processor, -100)
 
