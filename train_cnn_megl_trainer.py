@@ -10,6 +10,7 @@ from collections import Counter
 import datasets
 import evaluate
 import torch
+import torch.nn.functional as F
 from datasets import load_dataset
 
 import transformers
@@ -35,7 +36,12 @@ from transformers.models.auto.modeling_auto import (
 from transformers.trainer import _is_peft_model
 from transformers.testing_utils import CaptureLogger
 from transformers.trainer_utils import get_last_checkpoint
-from transformers.utils import check_min_version, send_example_telemetry
+from transformers.utils import (
+    check_min_version, 
+    send_example_telemetry,
+    is_apex_available,
+    is_sagemaker_mp_enabled
+)
 from transformers.utils.versions import require_version
 
 from model.utils.utils import *
@@ -46,12 +52,102 @@ from model.cnn import MEGL_CNN, MEGL_CNN_multimodal
 logger = logging.getLogger(__name__)
 
 
+# if is_sagemaker_mp_enabled():
+#     import smdistributed.modelparallel.torch as smp
+#     from smdistributed.modelparallel import __version__ as SMP_VERSION
+
+#     IS_SAGEMAKER_MP_POST_1_10 = version.parse(SMP_VERSION) >= version.parse("1.10")
+
+#     from .trainer_pt_utils import smp_forward_backward, smp_forward_only, smp_gather, smp_nested_concat
+# else:
+#     IS_SAGEMAKER_MP_POST_1_10 = False
+
 MODEL_CONFIG_CLASSES = list(MODEL_FOR_CAUSAL_LM_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
 @dataclass
 class ModelArguments:
-    model_name_or_path: Optional[str] = field(default="llava-hf/llava-1.5-7b-hf")
+    """
+    Arguments pertaining to which model/config/tokenizer we are going to fine-tune, or train from scratch.
+    """
+
+    model_name_or_path: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "The model checkpoint for weights initialization. Don't set if you want to train a model from scratch."
+            )
+        },
+    )
+    model_type: Optional[str] = field(
+        default=None,
+        metadata={"help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
+    )
+    config_overrides: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "Override some existing default config settings when a model is trained from scratch. Example: "
+                "n_embd=10,resid_pdrop=0.2,scale_attn_weights=false,summary_type=cls_index"
+            )
+        },
+    )
+    config_name: Optional[str] = field(
+        default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
+    )
+    tokenizer_name: Optional[str] = field(
+        default=None, metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
+    )
+    cache_dir: Optional[str] = field(
+        default=None,
+        metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
+    )
+    use_fast_tokenizer: bool = field(
+        default=False,
+        metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
+    )
+    model_revision: str = field(
+        default="main",
+        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
+    )
+    token: str = field(
+        default=None,
+        metadata={
+            "help": (
+                "The token to use as HTTP bearer authorization for remote files. If not specified, will use the token "
+                "generated when running `huggingface-cli login` (stored in `~/.huggingface`)."
+            )
+        },
+    )
+    trust_remote_code: bool = field(
+        default=False,
+        metadata={
+            "help": (
+                "Whether to trust the execution of code from datasets/models defined on the Hub."
+                " This option should only be set to `True` for repositories you trust and in which you have read the"
+                " code, as it will execute code present on the Hub on your local machine."
+            )
+        },
+    )
+    torch_dtype: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": (
+                "Override the default `torch.dtype` and load the model under this dtype. If `auto` is passed, the "
+                "dtype will be automatically derived from the model's weights."
+            ),
+            "choices": ["auto", "bfloat16", "float16", "float32"],
+        },
+    )
+    low_cpu_mem_usage: bool = field(
+        default=False,
+        metadata={
+            "help": (
+                "It is an option to create the model as an empty shell, then only materialize its parameters when the pretrained weights are loaded. "
+                "set True will benefit LLM loading time and RAM consumption."
+            )
+        },
+    )
     train_type: Optional[str] = field(
         default="none",
         metadata={
@@ -64,8 +160,17 @@ class ModelArguments:
         },
     )
     transformation_type: str = field(
-        default="HAICS", metadata={"help": "Transformation of saliency maps"}
+        default="HAICS", metadata={"help": "Transformation of saliency maps; choose from HAICS and GRADIA"}
     )
+    precision_type: Optional[str] = field(
+        default="float", metadata={"help": "Precision type of the model, choose from bf16, fp16 and float"}
+    )
+
+    def __post_init__(self):
+        if self.config_overrides is not None and (self.config_name is not None or self.model_name_or_path is not None):
+            raise ValueError(
+                "--config_overrides can't be used in combination with --config_name or --model_name_or_path"
+            )
     
 
 @dataclass
@@ -158,6 +263,7 @@ class DataTrainingArguments:
                 assert extension in ["csv", "json", "txt"], "`validation_file` should be a csv, a json or a txt file."
 
 def load_model_processor(num_classes, modelargs:ModelArguments):
+
     model = MEGL_CNN_multimodal(
         explanation_type="multimodal",
         num_classes=num_classes,
@@ -186,7 +292,7 @@ def load_model_processor(num_classes, modelargs:ModelArguments):
             task_type="CAUSAL_LM",
             modules_to_save=["multi_modal_projector"],
         )
-        model = get_peft_model(model, config)
+        model.llava_model = get_peft_model(model.llava_model, config)
 
     elif modelargs.train_type == "none":
         logging.warning("Training full model")
@@ -220,7 +326,7 @@ def load_model_processor(num_classes, modelargs:ModelArguments):
             task_type="CAUSAL_LM",
             modules_to_save=["multi_modal_projector"],
         )
-        model = get_peft_model(model, config)
+        model.llava_model = get_peft_model(model.llava_model, config)
 
     return model, processor
 
@@ -242,6 +348,12 @@ class MEGLTrainer(Trainer):
         )
         self.megl_pred_criterion = nn.CrossEntropyLoss()
     
+    def training_step(self, model, inputs):
+        loss = self.compute_loss(model, inputs)
+        if self.args.gradient_accumulation_steps > 1:
+            loss = loss / self.args.gradient_accumulation_steps
+        return loss
+
     def training_step(
         self,
         model: nn.Module,
@@ -257,19 +369,26 @@ class MEGLTrainer(Trainer):
         with self.compute_loss_context_manager():
             loss = self.compute_loss(model, inputs)
         
+        print("loss: ", loss)
+        print("loss.shape", loss.shape)
+        
         del inputs
         torch.cuda.empty_cache()
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
 
-        self.accelerator.backward(loss)
-
         # if self.use_apex:
         #     with amp.scale_loss(loss, self.optimizer) as scaled_loss:
         #         scaled_loss.backward()
         # else:
         #     self.accelerator.backward(loss)
+
+        self.accelerator.backward(loss)
+
+        tmp = loss.detach() / self.args.gradient_accumulation_steps
+        print("loss.detach: ", tmp)
+        print("loss.detach.shape", tmp.shape)
 
         return loss.detach() / self.args.gradient_accumulation_steps
 
@@ -304,9 +423,18 @@ class MEGLTrainer(Trainer):
             # We don't use .loss here since the model may return tuples instead of ModelOutput.
             loss = outputs["loss"] if isinstance(outputs, dict) else outputs[0]
         
-        pred_loss = self.megl_pred_criterion(y_label, inputs["class_ids"])
+        # pred_loss = self.megl_pred_criterion(
+        #     y_label.to(torch.float32), inputs["class_ids"].to(torch.int)
+        # )
+        pred_loss = F.cross_entropy(
+            y_label.to(torch.float32), inputs["class_ids"].to(torch.long)
+        )
 
-        total_loss = pred_loss + self.args.att_weight * att_loss + self.args.exp_weight * loss
+        # total_loss = pred_loss + self.args.att_weight * att_loss + self.args.exp_weight * loss
+        total_loss = pred_loss + 0.1 * att_loss + 0.1 * loss
+
+        print("total_loss:", total_loss)
+        print("total_loss.shape:", total_loss.shape)
 
         return (total_loss, outputs) if return_outputs else total_loss
 
@@ -314,8 +442,15 @@ def train():
     parser = transformers.HfArgumentParser(
         (ModelArguments, DataArguments, TrainingArguments)
     )
-    model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+    if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+        # If we pass only one argument to the script and it's the path to a json file,
+        # let's parse it to get our arguments.
+        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+    else:
+        model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+
     dataset = MEGLDataset(data_args.data_path)
+
     # Adjust the num_classes based on the actual dataset
     class_id_lst = [int(dataset[i][4]) for i in range(len(dataset))]
     class_id_cnt = Counter(class_id_lst)

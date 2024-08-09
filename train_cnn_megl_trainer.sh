@@ -3,8 +3,10 @@
 deepspeed --include localhost:0 train_cnn_megl_trainer.py \
     --deepspeed ds_zero2_no_offload.json \
     --model_name_or_path llava-hf/llava-1.5-7b-hf \
-    --train_type none \
-    --data_path MEGL/Datasets/Object_Classification \
+    --train_type use_lora \
+    --data_path /root/MEGL/Datasets/Object_Classification \
+    --transformation_type HAICS \
+    --precision_type bf16 \
     --remove_unused_columns false \
     --bf16 true \
     --fp16 false \
@@ -13,9 +15,9 @@ deepspeed --include localhost:0 train_cnn_megl_trainer.py \
     --dataloader_persistent_workers True \
     --output_dir output_model \
     --num_train_epochs 5 \
-    --per_device_train_batch_size 25 \
+    --per_device_train_batch_size 1 \
     --per_device_eval_batch_size 1 \
-    --gradient_accumulation_steps 8 \
+    --gradient_accumulation_steps 2 \
     --evaluation_strategy "no" \
     --save_strategy "epoch" \
     --save_total_limit 3 \
