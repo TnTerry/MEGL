@@ -10,7 +10,7 @@ cd MEGL
 
 ```
 conda create -n megl python=3.10 -y
-conda activate megl
+conda activate megl # source activate megl
 pip install --upgrade pip  # enable PEP 660 support
 pip install -r requirements.txt
 ```
